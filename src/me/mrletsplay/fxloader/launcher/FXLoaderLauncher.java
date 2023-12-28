@@ -2,15 +2,11 @@ package me.mrletsplay.fxloader.launcher;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,13 +22,12 @@ public class FXLoaderLauncher {
 		String mainClass;
 		String libDirectory;
 		List<String> dependencies;
-		try {
-			FileSystem plFS = FileSystems.newFileSystem(Paths.get(selfURL.toURI()), null);
-			String[] meta = new String(Files.readAllBytes(plFS.getPath("/META-INF/fxbuild/meta.txt")), StandardCharsets.UTF_8).split("\n");
+		try(InputStream in = FXLoader.class.getResourceAsStream("/META-INF/fxbuild/meta.txt")) {
+			String[] meta = new String(in.readAllBytes(), StandardCharsets.UTF_8).split("\n");
 			mainClass = meta[0];
 			dependencies = Arrays.asList(meta[1].split(";"));
 			libDirectory = meta[2];
-		} catch (IOException | URISyntaxException e) {
+		} catch (IOException e) {
 			throw new FXLoaderException("Failed to load metadata file", e);
 		}
 
@@ -49,7 +44,7 @@ public class FXLoaderLauncher {
 
 		for(String dep : dependencies) {
 			String[] spl = dep.split(":");
-			me.mrletsplay.fxloader.FXLoader.downloadDependency(spl[0], spl[1]).forEach(p -> {
+			FXLoader.downloadDependency(spl[0], spl[1]).forEach(p -> {
 				try {
 					urls.add(p.toUri().toURL());
 				} catch (MalformedURLException e) {

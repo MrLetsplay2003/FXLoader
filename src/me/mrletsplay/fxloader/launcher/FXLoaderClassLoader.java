@@ -41,11 +41,11 @@ public class FXLoaderClassLoader extends URLClassLoader {
 	}
 
 	@Override
-	protected Class<?> findClass(String moduleName, String name) {
-		if(debug) System.out.println("Find " + name + " in " + moduleName);
-		Class<?> c = super.findClass(moduleName, name);
-		if(debug) System.out.println(moduleName + "/" + name + " (found in module) -> " + c);
-		return c;
+	public URL findResource(String name) {
+		if(debug) System.out.println("Find resource" + name);
+		URL url = super.findResource(name);
+		if(debug && url != null) System.out.println(name + " (found resource) -> " + url);
+		return url != null ? url : parent.getResource(name);
 	}
 
 }
